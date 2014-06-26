@@ -135,6 +135,12 @@ unf sub [] = Succeeded sub
 unf sub ((Base n1, Base n2):tcs) = case n1 == n2 of
   True -> unf sub tcs
   False -> unificationError (Base n1) (Base n2)
+unf sub ((t1@(Var n1), t2@(Var n2)):tcs) = case t1 == t2 of
+  True -> unf sub tcs
+  False -> unf newSub newTCS
+  where
+    newSub = (M.insert t2 t1 (replaceSub t2 t1 (M.insert t1 t2 (replaceSub t1 t2 sub))))
+    newTCS = replaceInTCS t2 t1 (replaceInTCS t1 t2 tcs)
 unf sub ((t1@(Var n1), t2):tcs) = case t1 == t2 of
   True -> unf sub tcs
   False -> unf newSub newTCS
@@ -156,5 +162,5 @@ unificationError t1 t2 = Failed $ "Cannot unify types " ++ show t1 ++ " and " ++
 applySubstitution :: TypeSubstitution -> Type -> Type
 applySubstitution sub (Con name arity params) = Con name arity (L.map (applySubstitution sub) params)
 applySubstitution sub v = case M.lookup v sub of
-  Just s -> applySubstitution sub s
+  Just s -> applySubstitution (M.delete v sub) s
   Nothing -> v
