@@ -14,6 +14,7 @@ instance Monad Error where
 instance Eq a => Eq (Error a) where
   (==) (Succeeded l) (Succeeded r) = l == r
   (==) (Failed l) (Failed r) = l == r
+  (==) _ _ = False
 
 extractValue :: Error a -> a
 extractValue (Succeeded val) = val
