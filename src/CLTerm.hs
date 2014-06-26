@@ -107,7 +107,9 @@ replaceTC t1 t2 (x, y) = (replaceBy t1 t2 x, replaceBy t1 t2 y)
 replaceBy :: Type -> Type -> Type -> Type
 replaceBy t1 t2 x = case x == t1 of
   True -> t2
-  False -> x
+  False -> case x of
+    (Con a n params) -> Con a n (L.map (replaceBy t1 t2) params)
+    _ -> x
 
 typeConstraints :: (Typeable a) => Map String Type -> String -> CLTerm a -> Error [TypeConstraint]
 typeConstraints _ tv (Val v)  = Succeeded [typeConstraint (var tv) (getType v)]
@@ -147,7 +149,10 @@ unf sub ((t1@(Var n1), t2):tcs) = case t1 == t2 of
   where
     newSub = M.insert t1 t2 (replaceSub t1 t2 sub)
     newTCS = replaceInTCS t1 t2 tcs
-unf sub ((t1, Var n):tcs) = unf sub ((Var n, t1):tcs)
+unf sub ((t1, Var n):tcs) = unf newSub newTCS
+  where
+    newSub = M.insert (Var n) t1 (replaceSub (Var n) t1 sub)
+    newTCS = replaceInTCS (Var n) t1 tcs
 unf sub ((Con n1 a1 p1, Con n2 a2 p2):tcs) = case (Con n1 a1 p1) == (Con n2 a2 p2) of
   True -> unf sub (zip p1 p2 ++ tcs)
   False -> unificationError (Con n1 a1 p1) (Con n2 a2 p2)
