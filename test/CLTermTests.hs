@@ -28,10 +28,23 @@ advancedAssignTypeTests =
   testFunction (assignType extendedCombinators) advancedCases
   
 advancedCases =
-  [(ap (ap (com "Cons") (val $ int 4)) (com "Nil"), Succeeded $ con "List" 1 [var "a"])]
+  [(ap (ap (com "Cons") (val $ int 4)) (com "Nil"), Succeeded $ con "List" 1 [var "a"]),
+   (ap (ap (ap (com "Node") (val $ char 'a'))
+        (ap (com "Leaf") (val $ int 4))) (ap (com "Leaf") (val $ int 2)),
+    Succeeded $ con "Tree" 2 [base "CHAR", base "INT"]),
+   (ap (com "Node") (val $ float 2.3),
+    Succeeded $ func [con "Tree" 2 [base "FLOAT", var "a"],
+                      func [con "Tree" 2 [base "FLOAT", var "a"],
+                            con "Tree" 2 [base "FLOAT", var "a"]]])]
   
 extendedCombinators = M.union baseCombinators advancedCombinators
 
 advancedCombinators =
   M.fromList [("Cons", func [var "a", func [con "List" 1 [var "a"], con "List" 1 [var "a"]]]),
-              ("Nil", con "List" 1 [var "a"])]
+              ("Nil", con "List" 1 [var "a"]),
+              ("Node", func [var "a",
+                             func [con "Tree" 2 [var "a", var "b"],
+                                   func [con "Tree" 2 [var "a", var "b"],
+                                         con "Tree" 2 [var "a", var "b"]]]]),
+              ("Leaf", func [var "b",
+                             con "Tree" 2 [var "a", var "b"]])]
